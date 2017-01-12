@@ -1,6 +1,6 @@
-/**************************************************************/
-/*---    calculate propabilities beased on Bianchi 2005    ---*/
-/**************************************************************/
+/************************************************************/
+/*--- for calculate propabilities beased on Bianchi 2005 ---*/
+/************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -9,13 +9,13 @@
 #include "bianchi.h"
 
 /**/
-double sigma_pE(double p, double *E){
+double sigma_pE(double p, double *E, int R){
 
   int i;
   double pi=1.0;
   double sum=0.0;
 
-  for(i=0; i<=R_n; i++){
+  for(i=0; i<=R; i++){
     sum += pi * E[i];
     pi *= p;
   }
@@ -23,17 +23,38 @@ double sigma_pE(double p, double *E){
   return sum;
 }
 
+double func_tau_ap(double p_ap){
+
+  double new_p;
+
+  //new_p = p_ap + ALPHA*(1-p_ap);
+  //new_p = p_ap / (1-p_ap); //MM1
+  //new_p = 1 - pow(1-p_ap, (double)K);
+  //new_p = 1 - p_ap;
+  new_p = p_ap;
+
+  return  1.0 / (1 + (1 - new_p )/(1 - pow(new_p, R_ap+1.0)) * sigma_pE(new_p,E_ap,R_ap));
+}
+
+
 /**/
 double func_tau_n(double tau_n, int n){
 
   double p_n;
+  double p_ap;
+  double tau_ap;
 
-  /* tau_n -> p_n */
-  p_n = 1 - pow(1-tau_n, (double)(n-1));
+  /* tau_n -> p_ap */
+  p_ap = 1 - pow(1-tau_n, (double)n);
+
+  /* p_ap -> tau_ap */
+  tau_ap = func_tau_ap(p_ap);
+
+  /* tau_ap, tau_n -> p_n */
+  p_n = 1 - pow(1-tau_n, (double)(n-1)) * (1-tau_ap);
 
   /* p_n -> tau_n , return tau_n - tau_n */
-   return 1.0 / ( 1 + (1 - p_n)/( 1 - pow(p_n, R_n+1.0)) * sigma_pE(p_n, E_n)) - tau_n;
-
+  return 1.0 / ( 1 + (1 - p_n)/( 1 - pow(p_n, R_n+1.0)) * sigma_pE(p_n, E_n, R_n)) - tau_n;
 
 }
 
